@@ -21,12 +21,14 @@ class AuthMethods {
       if (email.isNotEmpty ||
           password.isNotEmpty ||
           username.isNotEmpty ||
-          bio.isNotEmpty ) {
+          bio.isNotEmpty) {
         UserCredential cred = await _auth.createUserWithEmailAndPassword(
             email: email, password: password);
-            print(cred.user!.uid);
+        print(cred.user!.uid);
+        
 
-           String photoUrl = await StorageMethods().uploadImageToStorage('displayPics', file, false);
+        String photoUrl = await StorageMethods()
+            .uploadImageToStorage('displayPics', file, false);
         await _firestore.collection('user').doc(cred.user!.uid).set({
           'username': username,
           'uid': cred.user!.uid,
@@ -36,17 +38,43 @@ class AuthMethods {
           'following': [],
           'photoUrl': photoUrl,
         });
-        
+
         res = "sucess";
-      }
-    } on FirebaseAuthException catch(e) {
-      if(e.code == 'invalid-email') {
+      } 
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'invalid-email') {
         res = 'Enter a valid email';
-      } else if(e.code == 'weak password') {
+      } else if (e.code == 'weak-password') {
         res = 'Your password must be more than 8 characters';
+      } else if (e.code == 'email-already-in-use') {
+        res = 'Email already in use, please sign up with different account';
       }
+    } catch (e) {
+      res = e.toString();
     }
-     catch (e) {
+    return res;
+  }
+
+  Future<String> loginUser({
+    required String email,
+    required String password,
+  }) async {
+    String res = "Some error occured";
+    try {
+      if (email.isNotEmpty || password.isNotEmpty) {
+        await _auth.signInWithEmailAndPassword(
+            email: email, password: password);
+        res = 'sucess';
+      } else {
+        res = 'Please enter all the fields';
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        res = 'User not registered';
+      } else if (e.code == 'wrong-password') {
+        res = 'Wrong password';
+      }
+    } catch (e) {
       res = e.toString();
     }
     return res;
