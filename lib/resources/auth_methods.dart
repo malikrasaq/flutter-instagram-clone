@@ -2,12 +2,22 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_instagram_clone/models/user.dart' as model;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_instagram_clone/resources/storage_methods.dart';
 
 class AuthMethods {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<model.User> getUserDetails() async {
+    User currentUser = _auth.currentUser!;
+
+    DocumentSnapshot documentSnapshot =
+        await _firestore.collection('user').doc(currentUser.uid).get();
+
+    return model.User.fromSnap(documentSnapshot);
+  }
 
   Future<String> signUpUser({
     required String email,
@@ -24,23 +34,24 @@ class AuthMethods {
           bio.isNotEmpty) {
         UserCredential cred = await _auth.createUserWithEmailAndPassword(
             email: email, password: password);
-        print(cred.user!.uid);
-        
 
         String photoUrl = await StorageMethods()
             .uploadImageToStorage('displayPics', file, false);
-        await _firestore.collection('user').doc(cred.user!.uid).set({
-          'username': username,
-          'uid': cred.user!.uid,
-          'email': email,
-          'bio': bio,
-          'followers': [],
-          'following': [],
-          'photoUrl': photoUrl,
-        });
+        model.User user = model.User(
+          username: username,
+          uid: cred.user!.uid,
+          email: email,
+          bio: bio,
+          followers: [],
+          following: [],
+          photoUrl: photoUrl,
+        );
+        await _firestore.collection('user').doc(cred.user!.uid).set(
+              user.toJson(),
+            );
 
         res = "sucess";
-      } 
+      }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'invalid-email') {
         res = 'Enter a valid email';
