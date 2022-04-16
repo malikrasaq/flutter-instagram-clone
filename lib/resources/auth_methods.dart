@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_instagram_clone/models/user.dart' as model;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_instagram_clone/resources/storage_methods.dart';
@@ -18,7 +17,7 @@ class AuthMethods {
 
     return model.User.fromSnap(documentSnapshot);
   }
-
+  // create account
   Future<String> signUpUser({
     required String email,
     required String password,
@@ -32,17 +31,19 @@ class AuthMethods {
           password.isNotEmpty ||
           username.isNotEmpty ||
           bio.isNotEmpty) {
+            // register user
         UserCredential cred = await _auth.createUserWithEmailAndPassword(
             email: email, password: password);
-
+          // store display pics to storage
         String photoUrl = await StorageMethods()
             .uploadImageToStorage('displayPics', file, false);
+             // add user to database
         model.User user = model.User(
           username: username,
           uid: cred.user!.uid,
           email: email,
           bio: bio,
-          followers: [],
+          followers: [], 
           following: [],
           photoUrl: photoUrl,
         );
@@ -66,6 +67,7 @@ class AuthMethods {
     return res;
   }
 
+  // login account
   Future<String> loginUser({
     required String email,
     required String password,
@@ -73,6 +75,7 @@ class AuthMethods {
     String res = "Some error occured";
     try {
       if (email.isNotEmpty || password.isNotEmpty) {
+        // login user
         await _auth.signInWithEmailAndPassword(
             email: email, password: password);
         res = 'sucess';

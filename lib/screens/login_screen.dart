@@ -50,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
       showSnackBar(res, context);
     }
     setState(() {
-      _isLoading = true;
+      _isLoading = false;
     });
   }
 

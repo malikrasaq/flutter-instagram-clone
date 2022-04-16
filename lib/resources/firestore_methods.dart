@@ -8,8 +8,8 @@ import 'package:uuid/uuid.dart';
 class FireStoreMethods {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<String> uploadPost(
-      String description, Uint8List file, String uid, String username, String profImage) async {
+  Future<String> uploadPost(String description, Uint8List file, String uid,
+      String username, String profImage) async {
     String res = "Some error occurred";
     try {
       String photoUrl =
@@ -23,10 +23,31 @@ class FireStoreMethods {
         postId: postId,
         datePublished: DateTime.now(),
         postUrl: photoUrl,
-         profImage: profImage,
+        profImage: profImage,
       );
-      _firestore.collection('posts').doc(postId).set(post.toJson());
+      _firestore.collection('posts').doc(postId).set(
+            post.toJson(),
+          );
       res = "success";
+    } catch (err) {
+      res = err.toString();
+    }
+    return res;
+  }
+
+  Future<String> likePost(String postId, String uid, List likes) async {
+    String res = "Some error occurred";
+    try {
+      if (likes.contains(uid)) {
+        _firestore.collection('posts').doc(postId).update({
+          'likes': FieldValue.arrayRemove([uid])
+        });
+      } else {
+        _firestore.collection('posts').doc(postId).update({
+          'likes': FieldValue.arrayUnion([uid])
+        });
+      }
+      res = 'success';
     } catch (err) {
       res = err.toString();
     }
